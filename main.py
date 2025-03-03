@@ -202,10 +202,11 @@ def access_memory(address, word, access_type):
       print(f'read hit [addr={address} index={index} block_index={block_index} tag={tag}: word={memval} ({range_low} - {range_high})]')
 
       # put tag in the tag queue -- for associative cache
+      cache.sets[index].tag = cache.sets[index].tag_queue[0]
 
     else: # write hit
-      # write the word to the cache strting at
-      # cache.sets[index].blocks[block_index].data[block_offset]
+      # write the word to the cache string at
+      cache.sets[index].blocks[block_index].data[block_offset]
       pass
 
       # for part two check whether this is a write-through cache
