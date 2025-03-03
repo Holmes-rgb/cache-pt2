@@ -319,6 +319,40 @@ def access_memory(address, word, access_type):
 #======================================================================
 
 def read_word(address):
+  #from address, compute the tag t, index i and block offset b
+  # Compute number of offset bits
+  offset_bits = CACHE_BLOCK_SIZE.bit_length() - 1
+
+  # Compute number of index bits
+  index_bits = (NUM_SETS - 1).bit_length()
+
+  # Compute block offset
+  b = address & ((1 << offset_bits) - 1)
+
+  # Compute index
+  i = (address >> offset_bits) & ((1 << index_bits) - 1)
+
+  # Compute tag
+  t = address >> (offset_bits + index_bits)
+  #look at the tags for the blocks set i (there will be m blocks, where m is the associativity
+  #IF the tag for block j in set i is t and the valid flag for block j in set i is true {
+    #this is a hit
+    #update the tag queue for set i: put t in the first position
+    #return the word (the four bytes) at positions b, b+1, b+2, b+3, form block j of set i
+  #} endif
+  #ELSE we have a miss
+    #start = blocksize * (address // blocksize), using integer division
+    #let j be the index of the block in set i that corresponds to the oldest tag in the tag queue for set i
+    #compute the range of the desired block in memory: start to start + blocksize - 1
+    #IF the dirty flag of block j in set i is true {
+      #write the block_size bytes of block j of set i to memory at A to A + blocksize - 1 // see later slide for A
+    #} endif
+    #read the blocksize bytes of memory from start to start + blocksize - 1 into block j of set i
+    #set the valid bit for block j of set i to true; set the dirty flag for block j to false
+    #set the tag for block j of set i to t
+    #update the tag queue for set i: put t in the first position
+    #return the word at positions b, b+1, b+2, b+3 from block j of set i
+
   return access_memory(address, None, AccessType.READ)
 
 #======================================================================
