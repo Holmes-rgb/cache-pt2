@@ -1,4 +1,4 @@
-# Luke Holmes
+# Luke Holmes & Greta Schutz
 
 from enum import Enum
 
@@ -176,6 +176,7 @@ def access_memory(address, word, access_type):
     found = True
 
   # READ:
+
   # if tag is found and the block is valid, then get the value and done
   # else
   #   // need to read a block from memory
