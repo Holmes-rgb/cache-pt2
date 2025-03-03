@@ -320,21 +320,11 @@ def access_memory(address, word, access_type):
 
 def read_word(address):
   #from address, compute the tag t, index i and block offset b
-  # Compute number of offset bits
-  offset_bits = CACHE_BLOCK_SIZE.bit_length() - 1
+   t, i, b = cache.decode_address(address)
 
-  # Compute number of index bits
-  index_bits = (NUM_SETS - 1).bit_length()
-
-  # Compute block offset
-  b = address & ((1 << offset_bits) - 1)
-
-  # Compute index
-  i = (address >> offset_bits) & ((1 << index_bits) - 1)
-
-  # Compute tag
-  t = address >> (offset_bits + index_bits)
-  #look at the tags for the blocks set i (there will be m blocks, where m is the associativity
+  #look at the tags for the blocks set i (there will be m blocks, where m is the associativity)
+  for j in range(ASSOCIATIVITY):
+    block = cache.sets[]
   #IF the tag for block j in set i is t and the valid flag for block j in set i is true {
     #this is a hit
     #update the tag queue for set i: put t in the first position
