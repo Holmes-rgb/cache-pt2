@@ -207,7 +207,7 @@ def access_memory(address, word, access_type):
 
     else: # write hit
       # write the word to the cache string at
-      cache.sets[index].blocks[block_index].data[block_offset]
+
       pass
 
       # for part two check whether this is a write-through cache
