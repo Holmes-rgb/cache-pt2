@@ -201,7 +201,7 @@ def access_memory(address, word, access_type):
                    source = cache.sets[index].blocks[block_index].data,
                    start = block_offset, size = WORDLENGTH)
       print(f'read hit [addr={address} index={index} block_index={block_index} tag={tag}: word={memval} ({range_low} - {range_high})]')
-
+      #TODO: make sure the the other contens of the tag queue is not overritten
       # put tag in the tag queue -- for associative cache
       cache.sets[index].tag = cache.sets[index].tag_queue[ASSOCIATIVITY - 1]
 
@@ -265,6 +265,7 @@ def access_memory(address, word, access_type):
       # this will be for part two
       pass
 
+    #TODO: this may be the source of the assertion error
     # put the tag in the tag queue
     # for part two, will be necessary do the following
     # enqueue(tag, cache.sets[index].tag_queue)
