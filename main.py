@@ -1,4 +1,4 @@
-# jdh 2-25-25 my solution to the part one
+# Luke Holmes
 
 from enum import Enum
 
@@ -9,6 +9,7 @@ MEMORY_SIZE      = 65536 # 2^16
 CACHE_SIZE       = 1024  # 2^10
 CACHE_BLOCK_SIZE = 64    # 2^6
 ASSOCIATIVITY    = 1     # direct mapped
+WRITE_BACK = 1
 
 NUM_SETS = (CACHE_SIZE // (CACHE_BLOCK_SIZE * ASSOCIATIVITY))
 NUM_BLOCKS = (CACHE_SIZE // CACHE_BLOCK_SIZE)
@@ -56,10 +57,9 @@ class CacheSet:
     self.blocks = [CacheBlock(cache_block_size) for i in range(associativity)]
     # for part one, each set has one block, and so we need to
     # save only a single tag value for a set
-    #self.tag = -1
+    self.tag = -1
 
     # for part two, you'll need a tag queue, like this:
-    #uncommmented new tag
     self.tag_queue = [-1 for i in range(associativity)]
 
 #======================================================================
