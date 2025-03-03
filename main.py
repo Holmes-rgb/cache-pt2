@@ -225,6 +225,22 @@ def access_memory(address, word, access_type):
   # for part one (direct-mapped cache), the block index is zero;
   # for part two, it will be a value between 0 and (associativity-1)
   block_index = 0
+  for b in range(ASSOCIATIVITY-1):
+    # check if the cache block is not full
+    if cache.sets[index].tag_queue[b] == -1:
+      block_index = b
+      found = True
+      break
+
+  #BLOCK REPLACEMENT
+  # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
+  if not found:
+    replace = cache.sets[index].tag_queue[0]
+    for b in range(ASSOCIATIVITY - 1):
+      if cache.sets[index].blocks[b].tag == replace:
+        block_index = b
+
+
 
   if not cache.sets[index].blocks[block_index].valid:
     found = True
