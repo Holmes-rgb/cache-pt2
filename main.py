@@ -56,10 +56,11 @@ class CacheSet:
     self.blocks = [CacheBlock(cache_block_size) for i in range(associativity)]
     # for part one, each set has one block, and so we need to
     # save only a single tag value for a set
-    self.tag = -1
+    #self.tag = -1
 
     # for part two, you'll need a tag queue, like this:
-    # self.tag_queue = [-1 for i in range(associativity)]
+    #uncommmented new tag
+    self.tag_queue = [-1 for i in range(associativity)]
 
 #======================================================================
 
