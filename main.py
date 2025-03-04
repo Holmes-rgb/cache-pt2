@@ -123,6 +123,30 @@ def binary_to_string(addrlen, val):
     val = val // 2
 
   return bits
+#======================================================================
+# helper function to add tags to the tag queue
+def enqueue(tag, tag_queue):
+  empty = False
+  # find the block index
+  for b in range(ASSOCIATIVITY-1):
+    # check if the cache block is not full
+    if tag_queue[b] == -1:
+      tag_queue[b] = tag
+      empty = True
+      break
+
+  #BLOCK REPLACEMENT
+  # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
+  if not empty:
+    # shift the queue and place the new tag at Associativity-1
+    for b in range(ASSOCIATIVITY - 1, 1, -1):
+      tag_queue[b] = tag_queue[b-1]
+
+    tag_queue[0] = tag
+
+
+
+
 
 #======================================================================
 # convert the four bytes in source[start:start+size] to a
@@ -229,9 +253,7 @@ def access_memory(address, word, access_type):
         memory[address + 1] = (word // 256) % 256
         memory[address + 2] = ((word // 256) // 256) % 256
         memory[address + 3] = (((word // 256) // 256) // 256) % 256
-
-      # for part two check whether this is a write-through cache
-
+        #TODO: What is the proper return val?
         memval = None
 
       return memval
@@ -259,15 +281,23 @@ def access_memory(address, word, access_type):
       print(f'read miss [addr={address} index={index} block_index={block_index} tag={tag}: word={memval} ({range_low} - {range_high})]')
       rtnval = memval
     else:
-      # this will be for part two
-      pass
+      #cache write miss
+      if WRITE_BACK:
+        # if the block that is going to be replaced is dirty, write the block to memory
+        if cache.sets[index].blocks[block_index].dirty:
+          dirty_block = cache.sets[index].blocks[block_index].data
+          memory[address] = dirty_block % 256
+          memory[address + 1] = (dirty_block // 256) % 256
+          memory[address + 2] = ((dirty_block // 256) // 256) % 256
+          memory[address + 3] = (((dirty_block // 256) // 256) // 256) % 256
+        # Read the block into the cache
+        #TODO: Luke left off here Mar 4
 
-    #TODO: this may be the source of the assertion error
+
+
+
     # put the tag in the tag queue
-    # for part two, will be necessary do the following
-    #enqueue(tag, cache.sets[index].tag_queue)
-    #but for part one, this suffices
-    cache.sets[index].tag = tag
+    enqueue(tag, cache.sets[index].tag_queue)
 
   else:
     # need to replace a cache line
