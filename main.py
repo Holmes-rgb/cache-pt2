@@ -162,16 +162,24 @@ def access_memory(address, word, access_type):
   range_low = (address >> cache.cache_block_size_bits) * CACHE_BLOCK_SIZE
   range_high = range_low + CACHE_BLOCK_SIZE - 1
 
-  if ASSOCIATIVITY != 1:
-    print('ERROR: assuming direct-mapped cache')
-    assert(ASSOCIATIVITY == 1)
-
-  if access_type != AccessType.READ:
-    print('ERROR: assuming only reads')
-    assert(access_type == AccessType.READ)
-
   found = False
-  block_index = 0
+  # find the block index
+  for b in range(ASSOCIATIVITY-1):
+    # check if the cache block is not full
+    if cache.sets[index].tag_queue[b] == -1:
+      block_index = b
+      found = True
+      break
+
+  #BLOCK REPLACEMENT
+  # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
+  if not found:
+    # this is the tag of the block to be replaced. We now need to find the block index of the block with that tag
+    replace = cache.sets[index].tag_queue[0]
+    for b in range(ASSOCIATIVITY - 1):
+      if cache.sets[index].blocks[b].tag == replace:
+        block_index = b
+
   if cache.sets[index].blocks[block_index].tag == tag:
     found = True
 
@@ -207,7 +215,7 @@ def access_memory(address, word, access_type):
 
     else: # write hit
       if access_type == AccessType.WRITE:
-        if WRITE_BACK:
+        
 
         #write the word to the cache string at
         cache.sets[index].blocks[block_index].data[block_offset] = word
@@ -220,30 +228,7 @@ def access_memory(address, word, access_type):
       return memval
 
   # otherwise, we have cache miss
-
   rtnval = None
-
-  found = False
-
-  # for part one (direct-mapped cache), the block index is zero;
-  # for part two, it will be a value between 0 and (associativity-1)
-  for b in range(ASSOCIATIVITY-1):
-    # check if the cache block is not full
-    if cache.sets[index].tag_queue[b] == -1:
-      block_index = b
-      found = True
-      break
-
-  #BLOCK REPLACEMENT
-  # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
-  if not found:
-    # this is the tag of the block to be replaced. We now need to find the block index of the block with that tag
-    replace = cache.sets[index].tag_queue[0]
-    for b in range(ASSOCIATIVITY - 1):
-      if cache.sets[index].blocks[b].tag == replace:
-        block_index = b
-
-
 
   if not cache.sets[index].blocks[block_index].valid:
     found = True
