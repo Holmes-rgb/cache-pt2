@@ -9,7 +9,7 @@ MEMORY_SIZE      = 65536 # 2^16
 CACHE_SIZE       = 1024  # 2^10
 CACHE_BLOCK_SIZE = 64    # 2^6
 ASSOCIATIVITY    = 1     # direct mapped
-WRITE_BACK = 1
+WRITE_BACK       = 1
 
 NUM_SETS = (CACHE_SIZE // (CACHE_BLOCK_SIZE * ASSOCIATIVITY))
 NUM_BLOCKS = (CACHE_SIZE // CACHE_BLOCK_SIZE)
@@ -176,7 +176,6 @@ def access_memory(address, word, access_type):
     found = True
 
   # READ:
-
   # if tag is found and the block is valid, then get the value and done
   # else
   #   // need to read a block from memory
@@ -201,7 +200,7 @@ def access_memory(address, word, access_type):
                    source = cache.sets[index].blocks[block_index].data,
                    start = block_offset, size = WORDLENGTH)
       print(f'read hit [addr={address} index={index} block_index={block_index} tag={tag}: word={memval} ({range_low} - {range_high})]')
-
+      # put tag in the tag queue -- for associative cache
       for i in range (ASSOCIATIVITY - 1):
         cache.sets[index].tag_queue[i - 1] = cache.sets[index].tag_queue[i]
       cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
@@ -210,7 +209,7 @@ def access_memory(address, word, access_type):
       if access_type == AccessType.WRITE:
         if WRITE_BACK:
 
-        # write the word to the cache string at
+        #write the word to the cache string at
         cache.sets[index].blocks[block_index].data[block_offset] = word
         pass
 
@@ -324,7 +323,7 @@ def access_memory(address, word, access_type):
     cache.sets[index].tag = tag
 
     # and for part two, will be necessary to do this:
-    #. enqueue(tag, cache.sets[index].tag_queue)
+    # enqueue(tag, cache.sets[index].tag_queue)
 
   if access_type == AccessType.READ:
     memval = bytes_to_word(
