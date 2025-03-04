@@ -201,9 +201,11 @@ def access_memory(address, word, access_type):
                    source = cache.sets[index].blocks[block_index].data,
                    start = block_offset, size = WORDLENGTH)
       print(f'read hit [addr={address} index={index} block_index={block_index} tag={tag}: word={memval} ({range_low} - {range_high})]')
-      #TODO: make sure the the other contens of the tag queue is not overritten
+      #TODO: make sure the the other contents of the tag queue is not overwritten
       # put tag in the tag queue -- for associative cache
-      cache.sets[index].tag = cache.sets[index].tag_queue[ASSOCIATIVITY - 1]
+      for i in range (ASSOCIATIVITY - 1):
+        cache.sets[index].tag_queue[i - 1] = cache.sets[index].tag_queue[i]
+      cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
 
     else: # write hit
       # write the word to the cache string at
