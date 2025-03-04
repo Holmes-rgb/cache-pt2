@@ -162,24 +162,27 @@ def access_memory(address, word, access_type):
   range_low = (address >> cache.cache_block_size_bits) * CACHE_BLOCK_SIZE
   range_high = range_low + CACHE_BLOCK_SIZE - 1
 
-  found = False
+
+  empty = False
   # find the block index
   for b in range(ASSOCIATIVITY-1):
     # check if the cache block is not full
     if cache.sets[index].tag_queue[b] == -1:
       block_index = b
-      found = True
+      empty = True
       break
 
   #BLOCK REPLACEMENT
   # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
-  if not found:
+  if not empty:
     # this is the tag of the block to be replaced. We now need to find the block index of the block with that tag
     replace = cache.sets[index].tag_queue[0]
     for b in range(ASSOCIATIVITY - 1):
       if cache.sets[index].blocks[b].tag == replace:
         block_index = b
 
+
+  found = False
   if cache.sets[index].blocks[block_index].tag == tag:
     found = True
 
@@ -214,12 +217,18 @@ def access_memory(address, word, access_type):
       cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
 
     else: # write hit
-      if access_type == AccessType.WRITE:
-        
-
+      if WRITE_BACK:
+        # tag queue already updated
+        cache.sets[index].blocks[block_index].dirty = True
         #write the word to the cache string at
         cache.sets[index].blocks[block_index].data[block_offset] = word
-        pass
+      else:
+        #write to the cache and the memory
+        cache.sets[index].blocks[block_index].data[block_offset] = word
+        memory[address] = word % 256
+        memory[address + 1] = (word // 256) % 256
+        memory[address + 2] = ((word // 256) // 256) % 256
+        memory[address + 3] = (((word // 256) // 256) // 256) % 256
 
       # for part two check whether this is a write-through cache
 
