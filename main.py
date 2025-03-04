@@ -208,15 +208,18 @@ def access_memory(address, word, access_type):
       cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
 
     else: # write hit
+      if access_type == AccessType.WRITE:
+        if WRITE_BACK:
+
       # write the word to the cache string at
-      cache.sets[index].blocks[block_index].data[block_offset] = word
-      pass
+        cache.sets[index].blocks[block_index].data[block_offset] = word
+        pass
 
       # for part two check whether this is a write-through cache
 
-      memval = None
+        memval = None
 
-    return memval
+      return memval
 
   # otherwise, we have cache miss
 
@@ -322,7 +325,7 @@ def access_memory(address, word, access_type):
     cache.sets[index].tag = tag
 
     # and for part two, will be necessary to do this:
-    # enqueue(tag, cache.sets[index].tag_queue)
+    #. enqueue(tag, cache.sets[index].tag_queue)
 
   if access_type == AccessType.READ:
     memval = bytes_to_word(
