@@ -268,8 +268,8 @@ def access_memory(address, word, access_type):
     #TODO: this may be the source of the assertion error
     # put the tag in the tag queue
     # for part two, will be necessary do the following
-    # enqueue(tag, cache.sets[index].tag_queue)
-    # but for part one, this suffices
+    #enqueue(tag, cache.sets[index].tag_queue)
+    #but for part one, this suffices
     cache.sets[index].tag = tag
 
   else:
@@ -336,31 +336,7 @@ def access_memory(address, word, access_type):
 #======================================================================
 
 def read_word(address):
-  #from address, compute the tag t, index i and block offset b
-   t, i, b = cache.decode_address(address)
-
-  #look at the tags for the blocks set i (there will be m blocks, where m is the associativity)
-  for j in range(ASSOCIATIVITY):
-    block = cache.sets[]
-  #IF the tag for block j in set i is t and the valid flag for block j in set i is true {
-    #this is a hit
-    #update the tag queue for set i: put t in the first position
-    #return the word (the four bytes) at positions b, b+1, b+2, b+3, form block j of set i
-  #} endif
-  #ELSE we have a miss
-    #start = blocksize * (address // blocksize), using integer division
-    #let j be the index of the block in set i that corresponds to the oldest tag in the tag queue for set i
-    #compute the range of the desired block in memory: start to start + blocksize - 1
-    #IF the dirty flag of block j in set i is true {
-      #write the block_size bytes of block j of set i to memory at A to A + blocksize - 1 // see later slide for A
-    #} endif
-    #read the blocksize bytes of memory from start to start + blocksize - 1 into block j of set i
-    #set the valid bit for block j of set i to true; set the dirty flag for block j to false
-    #set the tag for block j of set i to t
-    #update the tag queue for set i: put t in the first position
-    #return the word at positions b, b+1, b+2, b+3 from block j of set i
-
-  return access_memory(address, None, AccessType.READ)
+   return access_memory(address, None, AccessType.READ)
 
 #======================================================================
 
