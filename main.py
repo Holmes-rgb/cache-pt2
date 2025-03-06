@@ -1,4 +1,4 @@
-# jdh 2-25-25 my solution to the part one
+# Luke Holmes and Greta Schutz
 
 from enum import Enum
 
@@ -172,6 +172,9 @@ def word_to_bytes(dest, start, word, size):
 # word is unused for READ; word is the actual data for WRITE
 
 def access_memory(address, word, access_type):
+  global cache
+  cache = Cache(NUM_SETS, ASSOCIATIVITY, CACHE_BLOCK_SIZE)
+
   assert address < MEMORY_SIZE
   if address & 0x3 != 0:
     print(f'alignment error! address={address}')
@@ -182,30 +185,26 @@ def access_memory(address, word, access_type):
   range_low = (address >> cache.cache_block_size_bits) * CACHE_BLOCK_SIZE
   range_high = range_low + CACHE_BLOCK_SIZE - 1
 
+  found = False
   empty = False
   # find the block index
   for b in range(ASSOCIATIVITY):
     # check if the cache block is not full
-    # Todo: make sure the tag is valid if there is a miss set the block index to the index of the empty block if not empty set to lRU
-    if cache.sets[index].blocks[b].tag == tag :
+    # make sure the tag is valid if there is a miss set the block index to the index of the empty block if not empty set to lRU
+    if cache.sets[index].blocks[b].tag == tag and cache.sets[index].blocks[b].valid:
+      block_index = b
+      found = True
+      break
+    elif cache.sets[index].blocks[b].tag == -1:
       block_index = b
       empty = True
-      break
 
-  # BLOCK REPLACEMENT
-  # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
-  if not empty:
-    # this is the tag of the block to be replaced. We now need to find the block index of the block with that tag
-    replace = cache.sets[index].tag_queue[0]
-    for b in range(ASSOCIATIVITY - 1):
+  # there were no empty blocks and there was a cache miss
+  if not empty and not found:
+    for b in range(ASSOCIATIVITY):
+      replace = cache.sets[index].tag_queue[0]
       if cache.sets[index].blocks[b].tag == replace:
         block_index = b
-
-
-  found = False
-  #block_index = 0
-  if cache.sets[index].blocks[block_index].tag == tag:
-    found = True
 
   # READ:
   # if tag is found and the block is valid, then get the value and done
@@ -223,7 +222,7 @@ def access_memory(address, word, access_type):
   if found:
     # put tag in the tag queue -- for associative cache. the one being accessed right now needs to be in the last
     # position and all other tags need to be shifted
-    #Todo: there is an error here because if a block is selected in the midle of the queue this shifts incorrectly
+    #Todo: there is an error here because if a block is selected in the middle of the queue this shifts incorrectly (use enqueue function)
     for i in range(ASSOCIATIVITY - 1):
       cache.sets[index].tag_queue[i - 1] = cache.sets[index].tag_queue[i]
     cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
@@ -400,9 +399,6 @@ def part_one_test():
 #======================================================================
 
 def main():
-  global cache
-  cache = Cache(NUM_SETS, ASSOCIATIVITY, CACHE_BLOCK_SIZE)
-
   # prefill memory: the word at memory[a] will be a
   for i in range(MEMORY_SIZE // 4):
     word_to_bytes(dest = memory, start = 4*i, word = 4*i, size = WORDLENGTH)
