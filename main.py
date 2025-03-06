@@ -176,6 +176,7 @@ def word_to_bytes(dest, start, word, size):
 cache = Cache(NUM_SETS, ASSOCIATIVITY, CACHE_SIZE)
 
 def access_memory(address, word, access_type):
+
   assert address < MEMORY_SIZE
   if address & 0x3 != 0:
     print(f'alignment error! address={address}')
@@ -207,6 +208,7 @@ def access_memory(address, word, access_type):
 
   found = False
   #block_index = 0
+
   if cache.sets[index].blocks[block_index].tag == tag:
     found = True
 
@@ -268,8 +270,14 @@ def access_memory(address, word, access_type):
   # for part two, it will be a value between 0 and (associativity-1)
   #block_index = 0
 
+
   if not cache.sets[index].blocks[block_index].valid:
     found = True
+
+  #seeing if this hitting
+  print("is found true? :")
+  print(found)
+
 
   if found:
     # found a free block
@@ -301,6 +309,8 @@ def access_memory(address, word, access_type):
           memory[address + 3] = (((write // 256) // 256) // 256) % 256
         # Read the block into the cache
         #TODO: Luke left off here Mar 4
+
+
 
 
     # put the tag in the tag queue
@@ -358,7 +368,7 @@ def access_memory(address, word, access_type):
     cache.sets[index].tag = tag
 
     # and for part two, will be necessary to do this:
-    #enqueue(tag, cache.sets[index].tag_queue)
+    enqueue(tag, cache.sets[index].tag_queue)
 
   if access_type == AccessType.READ:
     memval = bytes_to_word(
