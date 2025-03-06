@@ -1,5 +1,6 @@
 # Luke Holmes & Greta Schutz
 
+
 from enum import Enum
 
 WORDLENGTH       = 4
