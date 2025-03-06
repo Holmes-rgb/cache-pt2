@@ -223,11 +223,7 @@ def access_memory(address, word, access_type):
   if found:
     # put tag in the tag queue -- for associative cache. the one being accessed right now needs to be in the last
     # position and all other tags need to be shifted
-    #Todo: there is an error here because if a block is selected in the middle of the queue this shifts incorrectly (use enqueue function)
-    for i in range(ASSOCIATIVITY - 1):
-      cache.sets[index].tag_queue[i - 1] = cache.sets[index].tag_queue[i]
-    cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
-
+    enqueue(cache.sets[index].tag, cache.sets[index].tag_queue)
 
     if access_type == AccessType.READ:
       if not cache.sets[index].blocks[block_index].valid:
