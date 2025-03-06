@@ -1,4 +1,4 @@
-# Luke Holmes & Greta Schutz
+# jdh 2-25-25 my solution to the part one
 
 
 from enum import Enum
@@ -145,10 +145,6 @@ def enqueue(tag, tag_queue):
 
     tag_queue[0] = tag
 
-
-
-
-
 #======================================================================
 # convert the four bytes in source[start:start+size] to a
 # little-endian integer
@@ -176,6 +172,9 @@ def word_to_bytes(dest, start, word, size):
 # access_type is READ or WRITE
 # word is unused for READ; word is the actual data for WRITE
 
+#create new cache
+cache = Cache(NUM_SETS, ASSOCIATIVITY, CACHE_SIZE)
+
 def access_memory(address, word, access_type):
   assert address < MEMORY_SIZE
   if address & 0x3 != 0:
@@ -187,17 +186,16 @@ def access_memory(address, word, access_type):
   range_low = (address >> cache.cache_block_size_bits) * CACHE_BLOCK_SIZE
   range_high = range_low + CACHE_BLOCK_SIZE - 1
 
-
   empty = False
   # find the block index
-  for b in range(ASSOCIATIVITY-1):
+  for b in range(ASSOCIATIVITY - 1):
     # check if the cache block is not full
     if cache.sets[index].tag_queue[b] == -1:
       block_index = b
       empty = True
       break
 
-  #BLOCK REPLACEMENT
+  # BLOCK REPLACEMENT
   # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
   if not empty:
     # this is the tag of the block to be replaced. We now need to find the block index of the block with that tag
@@ -208,6 +206,7 @@ def access_memory(address, word, access_type):
 
 
   found = False
+  #block_index = 0
   if cache.sets[index].blocks[block_index].tag == tag:
     found = True
 
@@ -260,7 +259,14 @@ def access_memory(address, word, access_type):
       return memval
 
   # otherwise, we have cache miss
+
   rtnval = None
+
+  #found = False gone in our main??
+
+  # for part one (direct-mapped cache), the block index is zero;
+  # for part two, it will be a value between 0 and (associativity-1)
+  #block_index = 0
 
   if not cache.sets[index].blocks[block_index].valid:
     found = True
@@ -287,18 +293,22 @@ def access_memory(address, word, access_type):
         # if the block that is going to be replaced is dirty, write the block to memory
         if cache.sets[index].blocks[block_index].dirty:
           dirty_block = cache.sets[index].blocks[block_index].data
-          memory[address] = dirty_block % 256
-          memory[address + 1] = (dirty_block // 256) % 256
-          memory[address + 2] = ((dirty_block // 256) // 256) % 256
-          memory[address + 3] = (((dirty_block // 256) // 256) // 256) % 256
+
+          write = bytes_to_word(source=dirty_block, start=block_offset, size=WORDLENGTH)
+          memory[address] = write % 256
+          memory[address + 1] = (write // 256) % 256
+          memory[address + 2] = ((write // 256) // 256) % 256
+          memory[address + 3] = (((write // 256) // 256) // 256) % 256
         # Read the block into the cache
         #TODO: Luke left off here Mar 4
 
 
-
-
     # put the tag in the tag queue
     enqueue(tag, cache.sets[index].tag_queue)
+    # for part two, will be necessary do the following
+    # enqueue(tag, cache.sets[index].tag_queue)
+    # but for part one, this suffices
+    # cache.sets[index].tag = tag
 
   else:
     # need to replace a cache line
@@ -348,7 +358,7 @@ def access_memory(address, word, access_type):
     cache.sets[index].tag = tag
 
     # and for part two, will be necessary to do this:
-    # enqueue(tag, cache.sets[index].tag_queue)
+    #enqueue(tag, cache.sets[index].tag_queue)
 
   if access_type == AccessType.READ:
     memval = bytes_to_word(
@@ -364,7 +374,8 @@ def access_memory(address, word, access_type):
 #======================================================================
 
 def read_word(address):
-   return access_memory(address, None, AccessType.READ)
+  # from address, compute the tag t, index i and block offset b
+  return access_memory(address, None, AccessType.READ)
 
 #======================================================================
 
