@@ -1,6 +1,5 @@
 # jdh 2-25-25 my solution to the part one
 
-
 from enum import Enum
 
 WORDLENGTH       = 4
@@ -172,11 +171,7 @@ def word_to_bytes(dest, start, word, size):
 # access_type is READ or WRITE
 # word is unused for READ; word is the actual data for WRITE
 
-#create new cache
-cache = Cache(NUM_SETS, ASSOCIATIVITY, CACHE_SIZE)
-
 def access_memory(address, word, access_type):
-
   assert address < MEMORY_SIZE
   if address & 0x3 != 0:
     print(f'alignment error! address={address}')
@@ -189,9 +184,10 @@ def access_memory(address, word, access_type):
 
   empty = False
   # find the block index
-  for b in range(ASSOCIATIVITY - 1):
+  for b in range(ASSOCIATIVITY):
     # check if the cache block is not full
-    if cache.sets[index].tag_queue[b] == -1:
+    # Todo: make sure the tag is valid if there is a miss set the block index to the index of the empty block if not empty set to lRU
+    if cache.sets[index].blocks[b].tag == tag :
       block_index = b
       empty = True
       break
@@ -208,7 +204,6 @@ def access_memory(address, word, access_type):
 
   found = False
   #block_index = 0
-
   if cache.sets[index].blocks[block_index].tag == tag:
     found = True
 
@@ -226,6 +221,14 @@ def access_memory(address, word, access_type):
   #   else find a target block and replace and then write the value
 
   if found:
+    # put tag in the tag queue -- for associative cache. the one being accessed right now needs to be in the last
+    # position and all other tags need to be shifted
+    #Todo: there is an error here because if a block is selected in the midle of the queue this shifts incorrectly
+    for i in range(ASSOCIATIVITY - 1):
+      cache.sets[index].tag_queue[i - 1] = cache.sets[index].tag_queue[i]
+    cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
+
+
     if access_type == AccessType.READ:
       if not cache.sets[index].blocks[block_index].valid:
         print('error: tag found in cache, but block is not valid')
@@ -237,19 +240,18 @@ def access_memory(address, word, access_type):
                    source = cache.sets[index].blocks[block_index].data,
                    start = block_offset, size = WORDLENGTH)
       print(f'read hit [addr={address} index={index} block_index={block_index} tag={tag}: word={memval} ({range_low} - {range_high})]')
-      # put tag in the tag queue -- for associative cache
-      for i in range (ASSOCIATIVITY - 1):
-        cache.sets[index].tag_queue[i - 1] = cache.sets[index].tag_queue[i]
-      cache.sets[index].tag_queue[ASSOCIATIVITY - 1] = cache.sets[index].tag
+
 
     else: # write hit
       if WRITE_BACK:
         # tag queue already updated
         cache.sets[index].blocks[block_index].dirty = True
         #write the word to the cache string at
+        #todo: write four bytes the same as I wrote to memory
         cache.sets[index].blocks[block_index].data[block_offset] = word
       else:
         #write to the cache and the memory
+        #todo: cange the way write to cache
         cache.sets[index].blocks[block_index].data[block_offset] = word
         memory[address] = word % 256
         memory[address + 1] = (word // 256) % 256
@@ -269,15 +271,9 @@ def access_memory(address, word, access_type):
   # for part one (direct-mapped cache), the block index is zero;
   # for part two, it will be a value between 0 and (associativity-1)
   #block_index = 0
-
-
+ #todo: find free block (same as up top)
   if not cache.sets[index].blocks[block_index].valid:
     found = True
-
-  #seeing if this hitting
-  print("is found true? :")
-  print(found)
-
 
   if found:
     # found a free block
@@ -302,7 +298,9 @@ def access_memory(address, word, access_type):
         if cache.sets[index].blocks[block_index].dirty:
           dirty_block = cache.sets[index].blocks[block_index].data
 
-          write = bytes_to_word(source=dirty_block, start=block_offset, size=WORDLENGTH)
+         #todo: copy the dirty block to memory
+         #todo: write the new block to the cache
+          #todo: write the decoded word to the new block
           memory[address] = write % 256
           memory[address + 1] = (write // 256) % 256
           memory[address + 2] = ((write // 256) // 256) % 256
@@ -311,9 +309,8 @@ def access_memory(address, word, access_type):
         #TODO: Luke left off here Mar 4
 
 
-
-
     # put the tag in the tag queue
+    #todo: this should have been used up top ( also make sue that this function is working right)
     enqueue(tag, cache.sets[index].tag_queue)
     # for part two, will be necessary do the following
     # enqueue(tag, cache.sets[index].tag_queue)
@@ -321,7 +318,7 @@ def access_memory(address, word, access_type):
     # cache.sets[index].tag = tag
 
   else:
-    # need to replace a cache line
+    # need to replace a cache block
     if access_type == AccessType.READ:
       # fetch from memory
       memval = bytes_to_word(
@@ -329,31 +326,31 @@ def access_memory(address, word, access_type):
       print(f'read miss + replace [addr={address} index={index} tag={tag}: word={memval} ({range_low} - {range_high})]')
       rtnval = memval
     else:
+      #todo: evict old block; write the new block
       # part two
-      pass
 
-    # throw out the LRU cache line the block with set_index == tag_queue_index
-    target_tag = cache.sets[index].tag
-    assert target_tag >= 0
-    found = False
-    block_index = 0
-    while not found and block_index < ASSOCIATIVITY:
-      if cache.sets[index].blocks[block_index].tag == target_tag:
-        found = True
-      else:
-        block_index = block_index + 1
+      # throw out the LRU cache line the block with set_index == tag_queue_index
+      target_tag = cache.sets[index].tag
+      assert target_tag >= 0
+      found = False
+      block_index = 0
+      while not found and block_index < ASSOCIATIVITY:
+        if cache.sets[index].blocks[block_index].tag == target_tag:
+          found = True
+        else:
+          block_index = block_index + 1
 
-    if not found:
-      print(f'error: did not find tag {target_tag} in set {index}')
-      for block_index in range(ASSOCIATIVITY):
-        print(f'blocks[{block_index}].tag = {cache.sets[index].blocks[block_index].tag}')
-    assert found
-
-    print(f'evict tag {target_tag} in block_index {block_index}')
+      if not found:
+        print(f'error: did not find tag {target_tag} in set {index}')
+        for block_index in range(ASSOCIATIVITY):
+          print(f'blocks[{block_index}].tag = {cache.sets[index].blocks[block_index].tag}')
+      assert found
+      print(f'evict tag {target_tag} in block_index {block_index}')
 
     # for part two, you'll have to do the following check:
     # if this is not a write-through cache and the cache block is dirty,
     # then write it
+    #todo: check if it is writethrough and dirty the write block to memory
 
     cache.sets[index].blocks[block_index].tag = tag
     cache.sets[index].blocks[block_index].valid = True
@@ -368,7 +365,7 @@ def access_memory(address, word, access_type):
     cache.sets[index].tag = tag
 
     # and for part two, will be necessary to do this:
-    enqueue(tag, cache.sets[index].tag_queue)
+    #enqueue(tag, cache.sets[index].tag_queue)
 
   if access_type == AccessType.READ:
     memval = bytes_to_word(
