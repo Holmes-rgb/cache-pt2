@@ -126,23 +126,24 @@ def binary_to_string(addrlen, val):
 #======================================================================
 # helper function to add tags to the tag queue
 def enqueue(tag, tag_queue):
-  empty = False
-  # find the block index
-  for b in range(ASSOCIATIVITY-1):
-    # check if the cache block is not full
+
+  # Check if tag is already in queue
+  if tag in tag_queue:
+    tag_queue.remove(tag)
+    tag_queue.append(tag)  # Move to the end
+    return
+
+  # Try to find an empty slot (-1 represents an empty slot)
+  for b in range(len(tag_queue)):
     if tag_queue[b] == -1:
       tag_queue[b] = tag
-      empty = True
-      break
+      return
 
-  #BLOCK REPLACEMENT
-  # if it is full put the block in the spot occupied by the bock with the tag at 0th queue index
-  if not empty:
-    # shift the queue and place the new tag at Associativity-1
-    for b in range(ASSOCIATIVITY - 1, 1, -1):
-      tag_queue[b] = tag_queue[b-1]
+  # Block Replacement: If no empty slot, replace LRU (first element)
+  for b in range(len(tag_queue)-1):
+    tag_queue[b] = tag_queue[b + 1]
 
-    tag_queue[0] = tag
+  tag_queue[ASSOCIATIVITY - 1] = tag  # Insert new tag at the end
 
 #======================================================================
 # convert the four bytes in source[start:start+size] to a
