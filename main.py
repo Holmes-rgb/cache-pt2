@@ -67,14 +67,13 @@ class CacheSet:
 class Cache:
   def __init__(self, num_sets, associativity, cache_block_size):
     self.write_through = False
-    self.sets = [CacheSet(cache_block_size, associativity) \
-                    for i in range(num_sets)]
+    self.sets = [CacheSet(cache_block_size, associativity) for i in range(num_sets)]
+    global memory_size_bits
     memory_size_bits = logb2(MEMORY_SIZE)
     self.cache_size_bits = logb2(CACHE_SIZE)
     self.cache_block_size_bits = logb2(CACHE_BLOCK_SIZE)
     self.index_length = logb2(NUM_SETS)
     self.block_offset_length = logb2(CACHE_BLOCK_SIZE)
-
     print('-----------------------------------------')
     print(f'cache size = {CACHE_SIZE}')
     print(f'block size = {CACHE_BLOCK_SIZE}')
@@ -126,24 +125,17 @@ def binary_to_string(addrlen, val):
 #======================================================================
 # helper function to add tags to the tag queue
 def enqueue(tag, tag_queue):
+    if tag in tag_queue:
+        tag_queue.remove(tag)
+        tag_queue.append(tag)
+        return
+    for b in range(len(tag_queue)):
+        if tag_queue[b] == -1:
+            tag_queue[b] = tag
+            return
+    tag_queue.pop(0)
+    tag_queue.append(tag)
 
-  # Check if tag is already in queue
-  if tag in tag_queue:
-    tag_queue.remove(tag)
-    tag_queue.append(tag)  # Move to the end
-    return
-
-  # Try to find an empty slot (-1 represents an empty slot)
-  for b in range(len(tag_queue)):
-    if tag_queue[b] == -1:
-      tag_queue[b] = tag
-      return
-
-  # Block Replacement: If no empty slot, replace LRU (first element)
-  for b in range(len(tag_queue)-1):
-    tag_queue[b] = tag_queue[b + 1]
-
-  tag_queue[ASSOCIATIVITY - 1] = tag  # Insert new tag at the end
 
 #======================================================================
 # convert the four bytes in source[start:start+size] to a
@@ -175,17 +167,16 @@ def word_to_bytes(dest, start, word, size):
 def access_memory(address, word, access_type):
   global cache
   cache = Cache(NUM_SETS, ASSOCIATIVITY, CACHE_BLOCK_SIZE)
-
   assert address < MEMORY_SIZE
   if address & 0x3 != 0:
     print(f'alignment error! address={address}')
     assert address & 0x3 == 0
 
   [tag, index, block_offset] = cache.decode_address(address)
-
   range_low = (address >> cache.cache_block_size_bits) * CACHE_BLOCK_SIZE
   range_high = range_low + CACHE_BLOCK_SIZE - 1
 
+  block_index = -1
   found = False
   empty = False
   # find the block index
@@ -200,12 +191,11 @@ def access_memory(address, word, access_type):
       block_index = b
       empty = True
 
-  # there were no empty blocks and there was a cache miss
-  if not empty and not found:
-    for b in range(ASSOCIATIVITY):
-      replace = cache.sets[index].tag_queue[0]
-      if cache.sets[index].blocks[b].tag == replace:
-        block_index = b
+    if not empty and not found:
+        replace = cache.sets[index].tag_queue[0]
+        for b in range(ASSOCIATIVITY):
+            if cache.sets[index].blocks[b].tag == replace:
+                block_index = b
 
   # READ:
   # if tag is found and the block is valid, then get the value and done
@@ -236,31 +226,29 @@ def access_memory(address, word, access_type):
                    source = cache.sets[index].blocks[block_index].data,
                    start = block_offset, size = WORDLENGTH)
       print(f'read hit [addr={address} index={index} block_index={block_index} tag={tag}: word={memval} ({range_low} - {range_high})]')
-
+      return memval
 
     else: # write hit
       if WRITE_BACK:
         # tag queue already updated
         cache.sets[index].blocks[block_index].dirty = True
-        #write the word to the cache string at
-        #todo: write four bytes the same as I wrote to memory
-        cache.sets[index].blocks[block_index].data[block_offset] = word
+        #todo:write the word to the cache string at
+        word_to_bytes(cache.sets[index].blocks[block_index].data, block_offset, word, WORDLENGTH)
+
       else:
         #write to the cache and the memory
-        #todo: cange the way write to cache
-        cache.sets[index].blocks[block_index].data[block_offset] = word
-        memory[address] = word % 256
-        memory[address + 1] = (word // 256) % 256
-        memory[address + 2] = ((word // 256) // 256) % 256
-        memory[address + 3] = (((word // 256) // 256) // 256) % 256
-        #TODO: What is the proper return val?
-        memval = None
-
-      return memval
+        #todo: change the way write to cache
+        word_to_bytes(cache.sets[index].blocks[block_index].data, block_offset, word, WORDLENGTH)
+        word_to_bytes(memory, address, word, WORDLENGTH)
+      return None
 
   # otherwise, we have cache miss
 
   rtnval = None
+  if WRITE_BACK and cache.sets[index].blocks[block_index].dirty:
+    dirty_block = cache.sets[index].blocks[block_index].data
+    for i in range(CACHE_BLOCK_SIZE // 4):
+      word_to_bytes(memory, 4 * block_index, bytes_to_word(dirty_block, i * 4, WORDLENGTH), WORDLENGTH)
 
   #found = False gone in our main??
 
@@ -279,7 +267,7 @@ def access_memory(address, word, access_type):
     # read the block from memory
     base_address = (address >> cache.cache_block_size_bits) * CACHE_BLOCK_SIZE
     for j in range(CACHE_BLOCK_SIZE):
-      cache.sets[index].blocks[block_index].data[j] = memory[base_address+j]
+      cache.sets[index].blocks[block_index].data[j] = memory[base_address + j]
 
     if access_type == AccessType.READ:
       memval = bytes_to_word(
@@ -295,12 +283,12 @@ def access_memory(address, word, access_type):
           dirty_block = cache.sets[index].blocks[block_index].data
 
          #todo: copy the dirty block to memory
-         #todo: write the new block to the cache
+          for i in range(CACHE_BLOCK_SIZE // 4):
+            word_to_bytes(dest=memory, start=4 * block_index, word=dirty_block * i, size=WORDLENGTH)
+
+          #todo: write the new block to the cache
           #todo: write the decoded word to the new block
-          memory[address] = write % 256
-          memory[address + 1] = (write // 256) % 256
-          memory[address + 2] = ((write // 256) // 256) % 256
-          memory[address + 3] = (((write // 256) // 256) // 256) % 256
+
         # Read the block into the cache
         #TODO: Luke left off here Mar 4
 
