@@ -144,10 +144,6 @@ def enqueue(tag, tag_queue):
 
     tag_queue[0] = tag
 
-
-
-
-
 #======================================================================
 # convert the four bytes in source[start:start+size] to a
 # little-endian integer
@@ -174,6 +170,9 @@ def word_to_bytes(dest, start, word, size):
 #======================================================================
 # access_type is READ or WRITE
 # word is unused for READ; word is the actual data for WRITE
+
+#create new cache
+cache = Cache(NUM_SETS, ASSOCIATIVITY, CACHE_SIZE)
 
 def access_memory(address, word, access_type):
   assert address < MEMORY_SIZE
@@ -293,10 +292,12 @@ def access_memory(address, word, access_type):
         # if the block that is going to be replaced is dirty, write the block to memory
         if cache.sets[index].blocks[block_index].dirty:
           dirty_block = cache.sets[index].blocks[block_index].data
-          memory[address] = dirty_block % 256
-          memory[address + 1] = (dirty_block // 256) % 256
-          memory[address + 2] = ((dirty_block // 256) // 256) % 256
-          memory[address + 3] = (((dirty_block // 256) // 256) // 256) % 256
+
+          write = bytes_to_word(source=dirty_block, start=block_offset, size=WORDLENGTH)
+          memory[address] = write % 256
+          memory[address + 1] = (write // 256) % 256
+          memory[address + 2] = ((write // 256) // 256) % 256
+          memory[address + 3] = (((write // 256) // 256) // 256) % 256
         # Read the block into the cache
         #TODO: Luke left off here Mar 4
 
