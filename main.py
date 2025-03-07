@@ -191,15 +191,20 @@ def access_memory(address, word, access_type):
             block_index = b
             found = True
             break
-        elif cache.sets[index].blocks[b].tag == -1:
-            block_index = b
-            empty = True
 
-        if not empty and not found:
-            replace = cache.sets[index].tag_queue[0]
-            for b in range(ASSOCIATIVITY):
-                if cache.sets[index].blocks[b].tag == replace:
-                    block_index = b
+    if not found:
+        for b in range(ASSOCIATIVITY):
+            if cache.sets[index].blocks[b].tag == -1:
+                block_index = b
+                empty = True
+                break
+
+        for b in range(ASSOCIATIVITY):
+            if not empty:
+                replace = cache.sets[index].tag_queue[0]
+                for b in range(ASSOCIATIVITY):
+                    if cache.sets[index].blocks[b].tag == replace:
+                        block_index = b
 
     # READ:
     # if tag is found and the block is valid, then get the value and done
