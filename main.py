@@ -186,7 +186,7 @@ def access_memory(address, word, access_type):
   # find the block index
   for b in range(ASSOCIATIVITY):
     # check if the cache block is not full
-    # Todo: make sure the tag is valid if there is a miss set the block index to the index of the empty block if not empty set to lRU
+    # Todo: make sure the tag is valid: if there is a miss, set the block index to the index of the empty block. if not empty set to lRU
     if cache.sets[index].blocks[b].tag == tag :
       block_index = b
       empty = True
@@ -350,7 +350,9 @@ def access_memory(address, word, access_type):
     # for part two, you'll have to do the following check:
     # if this is not a write-through cache and the cache block is dirty,
     # then write it
-    #todo: check if it is writethrough and dirty the write block to memory
+    #todo: check if it is not writethrough and dirty the write block to memory
+    #if (cache.write_through == False) & cache.sets[index].blocks[block_index].dirty:
+
 
     cache.sets[index].blocks[block_index].tag = tag
     cache.sets[index].blocks[block_index].valid = True
