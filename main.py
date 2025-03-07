@@ -124,6 +124,7 @@ def binary_to_string(addrlen, val):
   return bits
 #======================================================================
 # helper function to add tags to the tag queue
+#todo: (make sure that this function is working right)
 def enqueue(tag, tag_queue):
     if tag in tag_queue:
         tag_queue.remove(tag)
@@ -256,6 +257,7 @@ def access_memory(address, word, access_type):
   # for part two, it will be a value between 0 and (associativity-1)
   #block_index = 0
  #todo: find free block (same as up top)
+
   if not cache.sets[index].blocks[block_index].valid:
     found = True
 
@@ -294,8 +296,7 @@ def access_memory(address, word, access_type):
 
 
     # put the tag in the tag queue
-    #todo: this should have been used up top ( also make sue that this function is working right)
-    enqueue(tag, cache.sets[index].tag_queue)
+    # enqueue(tag, cache.sets[index].tag_queue) (used at top so commented out)
     # for part two, will be necessary do the following
     # enqueue(tag, cache.sets[index].tag_queue)
     # but for part one, this suffices
@@ -334,11 +335,11 @@ def access_memory(address, word, access_type):
     # for part two, you'll have to do the following check:
     # if this is not a write-through cache and the cache block is dirty,
     # then write it
-    #todo: check if it is writethrough and dirty the write block to memory
+    #todo: check if this works right
     if cache.write_through and cache.sets[index].blocks[block_index].dirty:
       #Write block to memory...
       dirty_block_2 = cache.sets[index].blocks[block_index].data
-      # copying the dirty block to memory maybe??
+      # copying the dirty block to memory...
       for i in range(CACHE_BLOCK_SIZE // 4):
         word_to_bytes(dest=memory, start=4 * block_index, word=dirty_block_2 * i, size=WORDLENGTH)
 
