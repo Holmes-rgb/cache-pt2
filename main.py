@@ -9,7 +9,7 @@ MEMORY_SIZE      = 65536 # 2^16
 CACHE_SIZE       = 1024  # 2^10
 CACHE_BLOCK_SIZE = 64    # 2^6
 ASSOCIATIVITY    = 4     # direct mapped
-WRITE_BACK       = 1
+WRITE_BACK       = 0
 
 NUM_SETS = (CACHE_SIZE // (CACHE_BLOCK_SIZE * ASSOCIATIVITY))
 NUM_BLOCKS = (CACHE_SIZE // CACHE_BLOCK_SIZE)
@@ -337,7 +337,7 @@ def access_memory(address, word, access_type):
 
             print(f'evict tag {target_tag} in block_index {block_index}')
             print(f'read in ({base_address} - {base_address + CACHE_BLOCK_SIZE - 1})')
-
+    print(f"{cache.sets[index].tag_queue}\n")
     return rtnval
 
 
