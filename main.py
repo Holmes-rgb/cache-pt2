@@ -249,7 +249,13 @@ def access_memory(address, word, access_type):
                 #todo: change the way write to cache
                 word_to_bytes(cache.sets[index].blocks[block_index].data, block_offset, word, WORDLENGTH)
 
+                memval = bytes_to_word(
+                    source=cache.sets[index].blocks[block_index].data,
+                    start=block_offset, size=WORDLENGTH)
+
+
                 block_address = (cache.sets[index].blocks[block_index].tag << (cache.index_length + cache.block_offset_length)) | (index << cache.block_offset_length)
+                print(f"write {memval} to memory address {block_address}; should be a write hit")
                 memory[block_address:block_address + CACHE_BLOCK_SIZE] = cache.sets[index].blocks[block_index].data[:]
             rtnval = None
 
