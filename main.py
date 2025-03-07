@@ -335,6 +335,12 @@ def access_memory(address, word, access_type):
     # if this is not a write-through cache and the cache block is dirty,
     # then write it
     #todo: check if it is writethrough and dirty the write block to memory
+    if cache.write_through and cache.sets[index].blocks[block_index].dirty:
+      #Write block to memory...
+      dirty_block_2 = cache.sets[index].blocks[block_index].data
+      # copying the dirty block to memory maybe??
+      for i in range(CACHE_BLOCK_SIZE // 4):
+        word_to_bytes(dest=memory, start=4 * block_index, word=dirty_block_2 * i, size=WORDLENGTH)
 
     cache.sets[index].blocks[block_index].tag = tag
     cache.sets[index].blocks[block_index].valid = True
